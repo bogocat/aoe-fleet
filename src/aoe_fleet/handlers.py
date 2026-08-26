@@ -19,7 +19,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aoe_fleet.registry import DEFAULT_USER_PATH, machine_summary
+from aoe_fleet import launch as launch_mod
+from aoe_fleet.launch import HostBlockedError, LaunchError
+from aoe_fleet.registry import DEFAULT_USER_PATH, TargetRegistryError, machine_summary
+from aoe_fleet.registry import get as get_target
 from aoe_fleet.registry import load as load_registry
 
 ERR_USER = -32001
@@ -57,8 +60,28 @@ def handle_targets(params: dict[str, Any], *, settings: Settings) -> dict[str, A
     return {"text": "\n".join(lines), "count": len(targets)}
 
 
+def handle_launch(params: dict[str, Any], *, settings: Settings) -> dict[str, Any]:
+    raw = params.get("args") or {}
+    name = str(raw.get("target", "") or "").strip()
+    if not name:
+        raise FleetCommandError("missing required arg: target")
+    targets = load_registry(settings.registry_path)
+    try:
+        entry = get_target(targets, name)
+    except TargetRegistryError as exc:
+        raise FleetCommandError(str(exc)) from exc
+    try:
+        result = launch_mod.launch(entry)
+    except HostBlockedError as exc:
+        raise FleetCommandError(str(exc)) from exc
+    except LaunchError as exc:
+        raise FleetExternalError(str(exc)) from exc
+    return result.to_reply()
+
+
 HANDLERS: dict[str, Any] = {
     "targets": handle_targets,
+    "launch": handle_launch,
 }
 
 

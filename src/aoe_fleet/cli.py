@@ -36,6 +36,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
     targets = sub.add_parser("targets", help="List the target registry (name, host, dir, harness, model)")
     targets.add_argument("--machine", action="store_true", help="Machine-readable JSON summary")
+    launch = sub.add_parser("launch", help="Launch a target as an aoe session")
+    launch.add_argument("target", help="Target name from the registry")
     return p
 
 
@@ -63,6 +65,12 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(result["targets"], indent=2))
         else:
             print(result["text"])
+        return 0
+    if args.command == "launch":
+        result = _emit("launch", {"args": {"target": args.target}}, settings)
+        print(f"launched {result['session_name']!r} ({result['action']}, {result['harness']})")
+        print(f"  cwd:    {result['cwd']}")
+        print("  monitor: aoe status")
         return 0
     return 1
 

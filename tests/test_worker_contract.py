@@ -50,3 +50,21 @@ def test_unknown_method_errors():
 def test_notification_has_no_response():
     responses = run_worker([{"jsonrpc": "2.0", "method": "bogocat.fleet.targets"}])
     assert responses == []
+
+
+def test_launch_unknown_target_returns_user_error():
+    # Unknown target fails before any aoe spawn, so this is safe to run against
+    # the real registry: it proves the launch method is wired with the -32001
+    # user-error mapping (unknown target, not -32601 nor -32603).
+    responses = run_worker(
+        [
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "bogocat.fleet.launch",
+                "params": {"args": {"target": "no-such-target"}},
+            }
+        ]
+    )
+    assert responses[0]["error"]["code"] == -32001
+    assert "no-such-target" in responses[0]["error"]["message"]
