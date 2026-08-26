@@ -1,0 +1,81 @@
+# bogocat.fleet — an Agent of Empires plugin.
+#
+# The fleet owns the launch surface above the aoe substrate: pinned targets
+# (name, host, dir, harness, model, opening-skill) and the commands that turn
+# one into a running session. This manifest declares the plugin's
+# contribution surface; the meat lives in src/aoe_fleet/.
+#
+# Manifest schema: aoe-plugin-api/src/manifest.rs in agent-of-empires. The host
+# parses this strictly (deny_unknown_fields), so every key here must match a
+# field in that schema. Field-by-field reference:
+# https://agent-of-empires.com/docs/api/plugin-api/
+
+id = "bogocat.fleet"
+name = "fleet"
+version = "0.1.0"
+
+# Manifest schema / host API version. v6 gives us commands, settings, and the
+# ui slots we'll add later (pane from v3, status from v4). Bump only when a
+# future child (pane / opening-skill / remote) needs a higher api.
+api_version = 6
+
+# Host-app compatibility range (a different axis from api_version).
+aoe_version = ">=1.11.0, <2.0.0"
+
+description = "bogocat.fleet — pinned launch targets over the Agent of Empires substrate. Plugin + standalone CLI."
+
+# ── Capabilities ─────────────────────────────────────────────────────────────────
+#
+# Each grant is prompted at install and pinned to the manifest hash. An update
+# that widens the set must be re-approved, so declare the full launch surface
+# now rather than widening it in the next PR.
+#
+# - runtime.worker      — the worker runs at all.
+# - process.spawn       — the worker shells out: `aoe add`, `aoe session start`,
+#                         `aoe session show` (idempotence check).
+# - fs.read             — reads ~/.config/aoe-fleet/targets.json (the user
+#                         overlay) on every launch/list.
+# - fs.write            — reserved for the registry-edit surface (child B) and
+#                         opening-skill injection (child C); granted now so a
+#                         later child doesn't force a re-approval.
+#
+# Subprocess argv is fixed and never shell-interpolated (no S603 footgun).
+capabilities = [
+    "runtime.worker",
+    "process.spawn",
+    "fs.read",
+    "fs.write",
+]
+
+# ── Commands ────────────────────────────────────────────────────────────────────
+#
+# The host namespacing is `plugin.bogocat.fleet.<id>`. Worker dispatch
+# dispatches on the trailing segment, so the command ids map cleanly.
+
+# Lists the target registry (name, host, dir, harness, model).
+[[commands]]
+id = "targets"
+title = "fleet: targets"
+description = "List every pinned launch target (name, host, dir, harness, model)."
+
+# ── Worker (Tier 1) ────────────────────────────────────────────────────────────
+#
+# The host spawns this process on demand when the user invokes a fleet command.
+# JSON-RPC 2.0 over ndjson on stdio; method dispatch on the trailing segment.
+# Exits on stdin EOF.
+#
+# Entry point MUST be plugin-relative so the daemon's PATH doesn't decide
+# whether the worker launches. The build steps run in the user's interactive
+# shell at install/update, where PATH is reliable (python3 + pip resolve).
+
+[runtime]
+kind = "command"
+command = [".aoe-build/venv/bin/fleet-worker"]
+
+[[runtime.build]]
+command = ["python3", "-m", "venv", ".aoe-build/venv"]
+platforms = ["linux", "macos"]
+
+[[runtime.build]]
+command = [".aoe-build/venv/bin/pip", "install", "."]
+platforms = ["linux", "macos"]
