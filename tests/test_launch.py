@@ -135,6 +135,25 @@ def test_stopped_session_is_started_not_readded():
     assert not any(c[:2] == ["aoe", "add"] for c in calls)
 
 
+def test_trashed_session_is_purged_and_recreated():
+    calls: list[list[str]] = []
+
+    def fake_run(argv, **kwargs):
+        calls.append(list(argv))
+        return ""
+
+    with mock.patch.object(
+        launch,
+        "session_exists",
+        return_value={"id": "abc", "status": "error", "state": "trashed"},
+    ):
+        with mock.patch.object(launch, "_run", side_effect=fake_run):
+            result = launch_top(_entry())
+    assert result.action == "created"
+    assert any(c[:2] == ["aoe", "rm"] for c in calls), "stale trashed record must be purged"
+    assert any(c[:2] == ["aoe", "add"] for c in calls)
+
+
 # ── duplicate surfacing ─────────────────────────────────────────────────
 
 

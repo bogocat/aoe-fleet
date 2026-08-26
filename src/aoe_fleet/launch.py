@@ -125,8 +125,12 @@ def launch(entry: TargetEntry) -> LaunchResult:
         )
 
     existing = session_exists(entry.name)
-    if existing is not None:
-        status = str(existing.get("status") or existing.get("state") or "")
+    # A live session is "already running" — attach (or start if stopped) rather
+    # than re-add. A trashed/archived record is NOT running: purge it
+    # best-effort and create fresh, so a stale trash entry can't collide with
+    # `aoe add` (duplicate title/path) after a previous `aoe remove`.
+    if existing is not None and existing.get("state") not in ("trashed", "archived"):
+        status = str(existing.get("status") or "")
         if status == "stopped":
             _run(["aoe", "session", "start", entry.name])
             return LaunchResult(
@@ -145,6 +149,12 @@ def launch(entry: TargetEntry) -> LaunchResult:
             action="attached",
             status=status,
         )
+
+    if existing is not None:
+        try:
+            _run(["aoe", "rm", "--purge", entry.name], check=False)
+        except LaunchError:
+            pass  # best-effort purge; the add below surfaces any real error
 
     add_argv = build_add_argv(entry)
     try:
