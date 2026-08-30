@@ -19,6 +19,7 @@ import sys
 from typing import Any
 
 from aoe_fleet.handlers import HANDLERS, FleetCommandError, FleetExternalError, Settings
+from aoe_fleet.registry import DEFAULT_USER_PATH
 
 
 def _env(name: str, default: str = "") -> str:
@@ -26,7 +27,7 @@ def _env(name: str, default: str = "") -> str:
 
 
 def settings_from_env() -> Settings:
-    return Settings(registry_path=_env("FLEET_REGISTRY_PATH"))
+    return Settings(registry_path=_env("FLEET_REGISTRY_PATH", DEFAULT_USER_PATH))
 
 
 def build_parser() -> argparse.ArgumentParser:

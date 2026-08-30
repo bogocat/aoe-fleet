@@ -31,9 +31,8 @@ from aoe_fleet.handlers import (
     FleetExternalError,
     Settings,
 )
+from aoe_fleet.registry import DEFAULT_USER_PATH
 from aoe_fleet.rpc import MethodNotFoundError
-
-DEFAULT_REGISTRY_PATH = ""
 
 
 class Worker:
@@ -108,7 +107,9 @@ class Worker:
 
 
 def _bootstrap_settings() -> Settings:
-    return Settings(registry_path=os.environ.get("FLEET_REGISTRY_PATH", DEFAULT_REGISTRY_PATH) or DEFAULT_REGISTRY_PATH)
+    return Settings(
+        registry_path=os.environ.get("FLEET_REGISTRY_PATH", DEFAULT_USER_PATH) or DEFAULT_USER_PATH
+    )
 
 
 def main(stdin: Any = None, stdout: Any = None) -> None:

@@ -19,8 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from aoe_fleet.registry import DEFAULT_USER_PATH, machine_summary
 from aoe_fleet.registry import load as load_registry
-from aoe_fleet.registry import machine_summary
 
 ERR_USER = -32001
 ERR_EXTERNAL = -32002
@@ -41,8 +41,10 @@ class Settings:
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> Settings:
-        v = raw.get("registry_path", "")
-        return cls(registry_path=str(v) if v is not None else "")
+        v = raw.get("registry_path")
+        if v is None or str(v) == "":
+            v = DEFAULT_USER_PATH
+        return cls(registry_path=str(v))
 
 
 def handle_targets(params: dict[str, Any], *, settings: Settings) -> dict[str, Any]:
