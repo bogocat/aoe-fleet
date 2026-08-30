@@ -32,7 +32,7 @@ from aoe_fleet.handlers import (
     Settings,
 )
 from aoe_fleet.registry import DEFAULT_USER_PATH
-from aoe_fleet.rpc import MethodNotFoundError
+from aoe_fleet.rpc import ERR_METHOD_NOT_FOUND, MethodNotFoundError
 
 
 class Worker:
@@ -87,7 +87,7 @@ class Worker:
         try:
             result = self.dispatch(method, params)
         except MethodNotFoundError as exc:
-            self._send_error(msg_id, -32601, f"unknown method {exc!s}")
+            self._send_error(msg_id, ERR_METHOD_NOT_FOUND, f"unknown method {exc!s}")
             return
         except FleetCommandError as exc:
             self._send_error(msg_id, ERR_USER, str(exc))

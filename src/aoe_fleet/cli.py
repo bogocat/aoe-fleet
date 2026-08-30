@@ -14,6 +14,7 @@ given (the worker gets them via inline ``params.settings``):
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from typing import Any
@@ -33,7 +34,8 @@ def settings_from_env() -> Settings:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="fleet", description="bogocat.fleet — pinned launch targets over the aoe substrate")
     sub = p.add_subparsers(dest="command", required=True)
-    sub.add_parser("targets", help="List the target registry (name, host, dir, harness, model)")
+    targets = sub.add_parser("targets", help="List the target registry (name, host, dir, harness, model)")
+    targets.add_argument("--machine", action="store_true", help="Machine-readable JSON summary")
     return p
 
 
@@ -55,8 +57,12 @@ def main(argv: list[str] | None = None) -> int:
     settings = settings_from_env()
 
     if args.command == "targets":
-        result = _emit("targets", {"args": {"format": "human"}}, settings)
-        print(result["text"])
+        fmt = "machine" if args.machine else "human"
+        result = _emit("targets", {"args": {"format": fmt}}, settings)
+        if fmt == "machine":
+            print(json.dumps(result["targets"], indent=2))
+        else:
+            print(result["text"])
         return 0
     return 1
 
