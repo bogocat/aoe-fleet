@@ -28,7 +28,6 @@ handlers can test the whole launch path without spawning a real aoe daemon.
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 from dataclasses import dataclass
 from typing import Any
@@ -77,7 +76,8 @@ def _run(argv: list[str], *, check: bool = True, timeout: float = 30.0) -> str:
     except subprocess.TimeoutExpired as exc:
         raise LaunchError(f"`{' '.join(argv)}` timed out after {timeout}s") from exc
     if check and proc.returncode != 0:
-        snippet = proc.stderr.strip().splitlines()[:3] or [proc.stdout[:200]]
+        both = f"{proc.stderr.strip()}\n{proc.stdout.strip()}".strip()
+        snippet = both.splitlines()[:3] or [proc.stdout[:200]]
         raise LaunchError(f"`{' '.join(argv)}` exited {proc.returncode}: {' | '.join(snippet)}")
     return proc.stdout
 
@@ -121,15 +121,17 @@ def launch(entry: TargetEntry) -> LaunchResult:
     if not entry.is_local:
         raise HostBlockedError(
             f"target {entry.name!r} has non-local host {entry.host!r}; remote launch is "
-            "blocked on upstream agent-of-empires#3545/#3546"
+            "blocked on upstream #3545/#3546 (agent-of-empires)"
         )
 
     existing = session_exists(entry.name)
-    # A live session is "already running" — attach (or start if stopped) rather
-    # than re-add. A trashed/archived record is NOT running: purge it
-    # best-effort and create fresh, so a stale trash entry can't collide with
-    # `aoe add` (duplicate title/path) after a previous `aoe remove`.
-    if existing is not None and existing.get("state") not in ("trashed", "archived"):
+    # Only a record with state == "live" is "already running" — attach (or start
+    # if stopped) rather than re-add. A trashed/archived record, a missing-state
+    # record, or an empty dict (aoe schema drift / a stale `session show`
+    # response) must NOT be mistaken for a live session: purge it best-effort
+    # and create fresh, so a stale entry can't collide with `aoe add`
+    # (duplicate title/path) after a previous `aoe remove`.
+    if existing is not None and existing.get("state") == "live":
         status = str(existing.get("status") or "")
         if status == "stopped":
             _run(["aoe", "session", "start", entry.name])
@@ -170,7 +172,3 @@ def launch(entry: TargetEntry) -> LaunchResult:
         action="created",
         status="running",
     )
-
-
-def aoe_available() -> bool:
-    return shutil.which("aoe") is not None

@@ -105,5 +105,6 @@ def test_launch_success_returns_reply_shape():
 def test_launch_subprocess_failure_is_external_error():
     with mock.patch.object(handlers, "load_registry", return_value={"home-portal": _local_target()}):
         with mock.patch.object(handlers.launch_mod, "launch", side_effect=LaunchError("aoe add failed")):
-            with pytest.raises(handlers.FleetExternalError):
+            with pytest.raises(handlers.FleetExternalError) as excinfo:
                 handlers.handle_launch({"args": {"target": "home-portal"}}, settings=_settings())
+    assert "aoe add failed" in str(excinfo.value)

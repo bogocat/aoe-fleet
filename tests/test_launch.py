@@ -6,6 +6,7 @@ subprocess boundary mocked so no real aoe daemon or agent is spawned.
 
 from __future__ import annotations
 
+import subprocess as sp
 from unittest import mock
 
 import pytest
@@ -58,8 +59,7 @@ def test_nonlocal_host_is_blocked():
     with pytest.raises(HostBlockedError) as excinfo:
         launch_top(_entry(host="10.89.97.50"))
     msg = str(excinfo.value)
-    assert "blocked on upstream" in msg
-    assert "#3545" in msg or "3545" in msg
+    assert "blocked on upstream #3545/#3546" in msg
 
 
 def test_local_host_passes_guard():
@@ -135,7 +135,8 @@ def test_stopped_session_is_started_not_readded():
     assert not any(c[:2] == ["aoe", "add"] for c in calls)
 
 
-def test_trashed_session_is_purged_and_recreated():
+@pytest.mark.parametrize("stale", ["trashed", "archived"])
+def test_trashed_or_archived_session_is_purged_and_recreated(stale):
     calls: list[list[str]] = []
 
     def fake_run(argv, **kwargs):
@@ -145,13 +146,47 @@ def test_trashed_session_is_purged_and_recreated():
     with mock.patch.object(
         launch,
         "session_exists",
-        return_value={"id": "abc", "status": "error", "state": "trashed"},
+        return_value={"id": "abc", "status": "error", "state": stale},
     ):
         with mock.patch.object(launch, "_run", side_effect=fake_run):
             result = launch_top(_entry())
     assert result.action == "created"
-    assert any(c[:2] == ["aoe", "rm"] for c in calls), "stale trashed record must be purged"
+    assert any(c[:2] == ["aoe", "rm"] for c in calls), "stale record must be purged"
     assert any(c[:2] == ["aoe", "add"] for c in calls)
+
+
+def test_empty_or_stateless_record_is_not_treated_as_live():
+    # A schema-drift `aoe session show` returning {} (or a record with no
+    # state) must re-add, never silently "attach" to nothing (review P0-1).
+    calls: list[list[str]] = []
+
+    def fake_run(argv, **kwargs):
+        calls.append(list(argv))
+        return ""
+
+    for record in ({}, {"id": "abc", "status": "running"}):
+        calls.clear()
+        with mock.patch.object(launch, "session_exists", return_value=record):
+            with mock.patch.object(launch, "_run", side_effect=fake_run):
+                result = launch_top(_entry())
+        assert result.action == "created", f"record {record!r} must re-add, not attach"
+        assert any(c[:2] == ["aoe", "add"] for c in calls)
+
+
+def test_run_includes_stdout_in_error_snippet():
+    # `aoe add` may print the duplicate marker to stdout while stderr carries
+    # unrelated noise; `_run` must include BOTH streams so the marker is
+    # detectable (review P0-2).
+    fake = sp.CompletedProcess(
+        args=["aoe", "add", "/x"],
+        returncode=1,
+        stdout="Session already exists with same title and path: home-portal",
+        stderr="warning banner\n",
+    )
+    with mock.patch.object(launch.subprocess, "run", return_value=fake):
+        with pytest.raises(LaunchError) as excinfo:
+            launch._run(["aoe", "add", "/x"])
+    assert "already exists" in str(excinfo.value)
 
 
 # ── duplicate surfacing ─────────────────────────────────────────────────
