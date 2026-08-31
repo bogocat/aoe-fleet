@@ -58,6 +58,14 @@ id = "targets"
 title = "fleet: targets"
 description = "List every pinned launch target (name, host, dir, harness, model)."
 
+# Resolves a target and turns it into a running aoe session (aoe add + session
+# start), idempotent on the session title. Returns synchronously once the
+# session is registered.
+[[commands]]
+id = "launch"
+title = "fleet: launch"
+description = "Launch a pinned target as an aoe session (attach if already running)."
+
 # ── Worker (Tier 1) ────────────────────────────────────────────────────────────
 #
 # The host spawns this process on demand when the user invokes a fleet command.
