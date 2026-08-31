@@ -1,0 +1,149 @@
+{
+  "distillery": {
+    "host": "local",
+    "dir": "/root/projects/distillery",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "home-portal": {
+    "host": "local",
+    "dir": "/root/projects/home-portal",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "tower-fleet": {
+    "host": "local",
+    "dir": "/root/tower-fleet",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "scripts": {
+    "host": "local",
+    "dir": "/root/scripts",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "palimpsest": {
+    "host": "local",
+    "dir": "/root/projects/palimpsest",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "rms": {
+    "host": "local",
+    "dir": "/root/projects/rms",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "deploy": {
+    "host": "local",
+    "dir": "/root/deploy/distillery",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "frame-cache": {
+    "host": "local",
+    "dir": "/root/projects/framecache",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "tms": {
+    "host": "local",
+    "dir": "/root/tms",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "timesheet": {
+    "host": "local",
+    "dir": "/root/projects/timesheet",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "jellyfin-3ds": {
+    "host": "local",
+    "dir": "/root/projects/jellyfin-3ds",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "quantumera-tactics": {
+    "host": "local",
+    "dir": "/root/projects/quantumera-tactics",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "subtitleai": {
+    "host": "local",
+    "dir": "/root/projects/subtitleai",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "tcg": {
+    "host": "local",
+    "dir": "/root/projects/tcg",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "trip-planner": {
+    "host": "local",
+    "dir": "/root/projects/trip-planner",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "music-control": {
+    "host": "local",
+    "dir": "/root/projects/music-control",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "music-display": {
+    "host": "local",
+    "dir": "/root/projects/music-display",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "garden": {
+    "host": "local",
+    "dir": "/root/projects/garden",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "garmin-doctor": {
+    "host": "local",
+    "dir": "/root/projects/garmin-doctor",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "pi-dotfiles": {
+    "host": "local",
+    "dir": "/root/pi-dotfiles",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  },
+  "tmq": {
+    "host": "local",
+    "dir": "/root/bogocat-tmq",
+    "harness": "pi",
+    "model": "",
+    "opening-skill": ""
+  }
+}

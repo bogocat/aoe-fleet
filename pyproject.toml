@@ -1,0 +1,99 @@
+[project]
+name = "aoe-fleet"
+description = "bogocat.fleet — pinned launch targets over the Agent of Empires substrate. Plugin + standalone CLI."
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+# No runtime dependencies: the worker shells `aoe` rather than importing an
+# SDK, keeping the runtime slim and giving operators the same audit trail as
+# tmq. Registry is pure stdlib JSON.
+
+[project.scripts]
+# The plugin host spawns this console script as the Tier 1 worker.
+fleet-worker = "aoe_fleet.worker:main"
+# Operator-facing CLI: `fleet targets`, `fleet launch <name>`.
+fleet = "aoe_fleet.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/aoe_fleet/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aoe_fleet"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.1",
+    "pytest>=8.3.4",
+    "ruff>=0.11.4",
+]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+disallow_untyped_defs = true
+show_error_codes = true
+explicit_package_bases = true
+
+[tool.ruff]
+exclude = [".aoe-build", ".venv", "venv", "build", "dist"]
+line-length = 120
+indent-width = 4
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",        # not every function needs a docstring
+    "ANN401",   # Any is intentional at the JSON-RPC boundary
+    "EM101",    # actionable hints are string literals by design
+    "EM102",
+    "TRY003",
+    "COM812",   # conflicts with the formatter
+    "ISC001",
+    "ARG001",   # unused function args (fixtures, mocks)
+    "ARG002",   # unused positional args
+    "ARG005",   # lambda ignores kwargs
+    "FBT001",   # bool-typed positional in handlers
+    "FBT003",   # bool positional in calls
+    "PLR0911",  # too many returns (handlers dispatch)
+    "PLR2004",  # magic numbers in tests
+    "PTH118",   # os.path.join acceptable in cli.py
+    "PTH123",   # builtin open() is fine
+    "SLF001",   # tests need to see private helpers
+    "PIE790",   # allow pass/ellipsis in stubs
+    "SIM108",   # ternary collapses are fine
+    "E501",     # 120-char lines, rare overflow accepted
+    "T201",     # cli.py / handlers.py intentionally print()
+    "S603",     # subprocess argv is fixed and never shell-interpolated
+    "S607",     # aoe is PATH-resolved on purpose
+    "BLE001",   # subprocess / host RPC boundaries must swallow python internals
+    "C901",     # _process does protocol dispatch
+    "TC001",
+    "TC003",
+    "SIM102",
+    "SIM105",
+    "SIM117",
+    "S110",
+    "S112",
+    "PTH110",   # os.path.exists for path strings
+    "TRY203",
+    "PT011",
+    "PLR0913",  # handler signatures mirror the registry schema
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "ANN", "INP001", "D", "S603", "SLF001", "PLR0915", "PLR2004", "ARG001", "ARG002", "ARG005", "SIM117", "S108", "TRY203", "PTH110"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = ["--strict-markers"]
